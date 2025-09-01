@@ -1,0 +1,8 @@
+# This is a placeholder for the Excel template file
+# The actual .xlsx file should be created with the following structure:
+#
+# Row 1 (Headers):
+# Property_ID | Property_Title | Description | Property_Type | Address_Line1 | City | State | Country | Pincode | Latitude | Longitude | Host_ID | Host_Name | Host_Contact | Host_Email | Base_Price | Currency | Amenity_1 | Amenity_2 | Property/URL | Status | createdAt | updatedAt
+#
+# Row 2+ (Data):
+# Sample data rows following the validation rules

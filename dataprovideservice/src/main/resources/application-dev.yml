@@ -1,0 +1,63 @@
+server:
+  port: 8084
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/DataProviderService
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    com.tdit: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/application.log
+    path: logs
+  logback:
+    rollingpolicy:
+      file-name-pattern: logs/application-%d{yyyy-MM-dd}.log
+      max-file-size: 10MB
+      total-size-cap: 100MB
+      max-history: 10
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+#springdoc:
+#  api-docs:
+#    path: /api-docs
+#  swagger-ui:
+#    path: /swagger-ui
+
+# SonarQube Configuration (commented)
+#sonar:
+#  projectKey: LocationService
+#  projectName: LocationService
+#  projectVersion: 1.0
+#  sources: src
+#  host:
+#    url: http://localhost:9000
+#  login: sqp_6bc949469690f5d1d93b76c561a03868d6a40e06
+
+
