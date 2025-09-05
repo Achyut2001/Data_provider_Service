@@ -21,14 +21,14 @@ public class ExcelValidationService {
         List<String> errors = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
 
-        // Use Spring's validation framework
+
         Set<ConstraintViolation<ExcelRowData>> violations = validator.validate(rowData);
         
         for (ConstraintViolation<ExcelRowData> violation : violations) {
             errors.add(violation.getMessage());
         }
 
-        // Additional business logic validations that can't be expressed with annotations
+
         addBusinessValidations(rowData, errors, warnings);
 
         boolean success = errors.isEmpty();
@@ -42,7 +42,7 @@ public class ExcelValidationService {
     }
 
     private void addBusinessValidations(ExcelRowData rowData, List<String> errors, List<String> warnings) {
-        // Currency validation - check if it's in our preferred list
+
         if (rowData.getCurrency() != null) {
             List<String> preferredCurrencies = List.of("INR", "USD", "EUR", "GBP", "CAD", "AUD");
             if (!preferredCurrencies.contains(rowData.getCurrency().toUpperCase())) {
@@ -50,7 +50,7 @@ public class ExcelValidationService {
             }
         }
 
-        // Latitude validation - check range
+
         if (rowData.getLatitude() != null && !rowData.getLatitude().trim().isEmpty()) {
             try {
                 double lat = Double.parseDouble(rowData.getLatitude());
@@ -62,7 +62,6 @@ public class ExcelValidationService {
             }
         }
 
-        // Longitude validation - check range
         if (rowData.getLongitude() != null && !rowData.getLongitude().trim().isEmpty()) {
             try {
                 double lng = Double.parseDouble(rowData.getLongitude());
@@ -74,7 +73,7 @@ public class ExcelValidationService {
             }
         }
 
-        // Base price validation - check if positive
+
         if (rowData.getBasePrice() != null && !rowData.getBasePrice().trim().isEmpty()) {
             try {
                 double price = Double.parseDouble(rowData.getBasePrice());
@@ -86,7 +85,7 @@ public class ExcelValidationService {
             }
         }
 
-        // Property URL validation - additional check for common TLDs
+
         if (rowData.getPropertyUrl() != null && !rowData.getPropertyUrl().trim().isEmpty()) {
             String url = rowData.getPropertyUrl().toLowerCase();
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
@@ -94,9 +93,7 @@ public class ExcelValidationService {
             }
         }
 
-        // Host ID and Host Name consistency check
         if (rowData.getHostId() != null && rowData.getHostName() != null) {
-            // This could be enhanced to check against actual host master data
             if (rowData.getHostId().trim().isEmpty() && !rowData.getHostName().trim().isEmpty()) {
                 warnings.add("Host ID is empty but Host Name is provided");
             }

@@ -1,5 +1,8 @@
 package com.tdit.dataprovideservice.dto;
 
+
+import com.tdit.dataprovideservice.entity.Property_Type;
+import com.tdit.dataprovideservice.entity.Status;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.Builder;
@@ -8,6 +11,7 @@ import lombok.AllArgsConstructor;
 
 import java.util.Arrays;
 import java.util.List;
+
 
 @Data
 @Builder
@@ -24,10 +28,8 @@ public class ExcelRowData {
     @Size(max = 500, message = "Description must be max 500 characters")
     private String description;
 
-    @NotBlank(message = "Property type is mandatory")
-    @Pattern(regexp = "^(Apartment|Villa|PG|Hotel|Hostel)$",
-            message = "Property type must be one of: Apartment, Villa, PG, Hotel, Hostel")
-    private String propertyType;
+    @NotNull(message = "Property type is mandatory")
+    private Property_Type propertyType;
 
     @NotBlank(message = "Address Line 1 is mandatory")
     @Size(max = 200, message = "Address Line 1 must be max 200 characters")
@@ -82,17 +84,15 @@ public class ExcelRowData {
     private String currency;
 
     @Size(max = 1000, message = "Amenities must be max 1000 characters")
-    private String amenities; // <-- new single column in Excel (comma-separated or JSON)
+    private String amenities;
 
     @Size(max = 500, message = "Property URL must be max 500 characters")
     @Pattern(regexp = "^(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})([/\\w .-]*)*/?$",
             message = "Property URL format may be invalid")
     private String propertyUrl;
 
-    @NotBlank(message = "Status is mandatory")
-    @Pattern(regexp = "^(ACTIVE|INACTIVE|PENDING)$",
-            message = "Status must be one of: ACTIVE, INACTIVE, PENDING")
-    private String status;
+    @NotNull(message = "Status is mandatory")
+    private Status status;
 
     @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}",
             message = "Created date must be in format: yyyy-MM-dd HH:mm:ss")
@@ -102,12 +102,10 @@ public class ExcelRowData {
             message = "Updated date must be in format: yyyy-MM-dd HH:mm:ss")
     private String updatedAt;
 
-    //  convert string to list
     public List<String> getAmenitiesList() {
         if (amenities == null || amenities.trim().isEmpty()) {
             return new java.util.ArrayList<>();
         }
-        // Support JSON-like ["WiFi","AC"] or comma-separated "WiFi,AC"
         String clean = amenities.trim();
         if (clean.startsWith("[") && clean.endsWith("]")) {
             clean = clean.substring(1, clean.length() - 1).replace("\"", "");

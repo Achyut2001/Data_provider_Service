@@ -8,5 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface UploadAuditRepository extends JpaRepository<UploadAudit, UUID> {
-    // Custom queries can be added here
+
 }

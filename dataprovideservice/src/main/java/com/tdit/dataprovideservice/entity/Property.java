@@ -65,7 +65,6 @@ public class Property {
     @Column(length = 3)
     private String currency;
 
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private List<String> amenities;

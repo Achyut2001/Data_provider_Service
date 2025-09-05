@@ -1,5 +1,6 @@
 package com.tdit.dataprovideservice.service;
 
+
 import com.tdit.dataprovideservice.dto.ExcelRowData;
 import com.tdit.dataprovideservice.dto.ExcelUploadResponse;
 import com.tdit.dataprovideservice.entity.Property;
@@ -15,6 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static com.tdit.dataprovideservice.entity.Constants.*;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -27,7 +30,6 @@ public class ExcelUploadService {
 
     @Transactional
     public ExcelUploadResponse processExcelUpload(MultipartFile file, String uploadedBy) {
-
         UploadAudit audit = UploadAudit.builder()
                 .fileName(file.getOriginalFilename())
                 .uploadedBy(uploadedBy)
@@ -36,12 +38,10 @@ public class ExcelUploadService {
                 .rowResults(new HashMap<>())
                 .build();
 
-        // Save to DB so Hibernate generates UUID
         audit = uploadAuditRepository.save(audit);
         UUID uploadId = audit.getUploadId();
 
         try {
-            // Process Excel file
             List<ExcelRowData> rows = excelProcessorService.processExcelFile(file);
 
             int totalRows = rows.size();
@@ -52,15 +52,14 @@ public class ExcelUploadService {
             Map<Integer, UploadAudit.RowResult> rowResults = new HashMap<>();
             List<Property> validProperties = new ArrayList<>();
 
-            // Validate each row
             for (int i = 0; i < rows.size(); i++) {
                 ExcelRowData rowData = rows.get(i);
-                int rowNumber = i + 2; // Excel rows start from 1, skip header
+                int rowNumber = i + 2;
 
                 if (rowData == null) {
                     UploadAudit.RowResult result = UploadAudit.RowResult.builder()
                             .success(false)
-                            .errorMessage("Failed to extract row data")
+                            .errorMessage(ERROR_ROW_EXTRACTION)
                             .rowNumber(rowNumber)
                             .build();
                     rowResults.put(rowNumber, result);
@@ -81,9 +80,9 @@ public class ExcelUploadService {
                             warningRows++;
                         }
                     } catch (Exception e) {
-                        log.error("Error converting row {} to property: {}", rowNumber, e.getMessage());
+                        log.error(ERROR_PROPERTY_CONVERSION, rowNumber, e.getMessage());
                         validationResult.setSuccess(false);
-                        validationResult.setErrorMessage("Error converting to property: " + e.getMessage());
+                        validationResult.setErrorMessage(ERROR_PROPERTY_CONVERSION + e.getMessage());
                         successRows--;
                         failedRows++;
                     }
@@ -92,12 +91,10 @@ public class ExcelUploadService {
                 }
             }
 
-            // Save valid properties to database
             if (!validProperties.isEmpty()) {
                 propertyRepository.saveAll(validProperties);
             }
 
-            // Update audit record
             audit.setStatus(UploadAudit.UploadStatus.COMPLETED);
             audit.setRowResults(rowResults);
             audit.setTotalRows(totalRows);
@@ -114,24 +111,23 @@ public class ExcelUploadService {
                     .successRows(successRows)
                     .failedRows(failedRows)
                     .warningRows(warningRows)
-                    .status("COMPLETED")
-                    .message(String.format("Processed %d rows: %d success, %d failed, %d warnings",
+                    .status(STATUS_COMPLETED)
+                    .message(String.format(MESSAGE_TEMPLATE,
                             totalRows, successRows, failedRows, warningRows))
                     .build();
 
         } catch (Exception e) {
-            log.error("Error processing Excel upload: {}", e.getMessage(), e);
+            log.error(ERROR_PROCESSING_EXCEL_FILE, e.getMessage(), e);
 
-            // Update audit record with failure
             audit.setStatus(UploadAudit.UploadStatus.FAILED);
             uploadAuditRepository.save(audit);
 
-            throw new RuntimeException("Failed to process Excel file: " + e.getMessage());
+            throw new RuntimeException(ERROR_PROCESSING_EXCEL_FILE + e.getMessage());
         }
     }
 
     public UploadAudit getUploadStatus(UUID uploadId) {
         return uploadAuditRepository.findById(uploadId)
-                .orElseThrow(() -> new RuntimeException("Upload not found: " + uploadId));
+                .orElseThrow(() -> new RuntimeException(UPLOAD_NOT_FOUND + uploadId));
     }
 }

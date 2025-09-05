@@ -1,9 +1,10 @@
 package com.tdit.dataprovideservice.controller;
 
 import com.tdit.dataprovideservice.dto.ExcelUploadResponse;
+import com.tdit.dataprovideservice.entity.Property;
 import com.tdit.dataprovideservice.entity.UploadAudit;
 import com.tdit.dataprovideservice.service.ExcelUploadService;
-import lombok.Builder;
+import com.tdit.dataprovideservice.service.PropertyServiceAdmin;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -11,25 +12,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
-@RestController
-@RequestMapping("/api/excel")
 @RequiredArgsConstructor
 @Slf4j
-@Builder
 @CrossOrigin(origins = "*")
+@RestController
+@RequestMapping("/api/excel")
 public class ExcelUploadController {
 
     private final ExcelUploadService excelUploadService;
+    private final PropertyServiceAdmin propertyServiceAdmin;
 
     @PostMapping("/upload")
     public ResponseEntity<ExcelUploadResponse> uploadExcel(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "uploadedBy", defaultValue = "system") String uploadedBy) {
-        
+
         try {
-            // Validate file
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest()
                         .body(ExcelUploadResponse.builder()
@@ -37,7 +38,6 @@ public class ExcelUploadController {
                                 .message("File is empty")
                                 .build());
             }
-            
             if (!file.getOriginalFilename().endsWith(".xlsx")) {
                 return ResponseEntity.badRequest()
                         .body(ExcelUploadResponse.builder()
@@ -45,12 +45,9 @@ public class ExcelUploadController {
                                 .message("Only .xlsx files are supported")
                                 .build());
             }
-            
             log.info("Processing Excel upload: {} by user: {}", file.getOriginalFilename(), uploadedBy);
-            
             ExcelUploadResponse response = excelUploadService.processExcelUpload(file, uploadedBy);
             return ResponseEntity.ok(response);
-            
         } catch (Exception e) {
             log.error("Error in Excel upload: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -68,10 +65,23 @@ public class ExcelUploadController {
             return ResponseEntity.ok(audit);
         } catch (Exception e) {
             log.error("Error getting upload status: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
+    @PutMapping("/admin/{id}/status")
+    public ResponseEntity<String> updatePropertyStatus(
+            @PathVariable Long id,
+            @RequestParam String status) {
+        if (!status.equalsIgnoreCase("APPROVED") && !status.equalsIgnoreCase("REJECTED")) {
+            return ResponseEntity.badRequest().body("Invalid status. Only APPROVED or REJECTED allowed.");
+        }
+        propertyServiceAdmin.updatePropertyStatus(id, status.toUpperCase());
+        return ResponseEntity.ok("Property status updated to " + status.toUpperCase());
+    }
 
+    @GetMapping("/properties/rejected")
+    public ResponseEntity<List<Property>> getRejectedProperties() {
+        return ResponseEntity.ok(propertyServiceAdmin.getRejectedProperties());
+    }
 }

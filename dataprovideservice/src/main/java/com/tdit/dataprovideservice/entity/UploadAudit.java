@@ -28,7 +28,6 @@ public class UploadAudit {
     @Enumerated(EnumType.STRING)
     private UploadStatus status;
 
-    // ✅ Hibernate 6 way to store JSON (PostgreSQL jsonb)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private Map<Integer, RowResult> rowResults;
